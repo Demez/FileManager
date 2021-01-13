@@ -448,7 +448,11 @@ int main(int argc, char* argv[])
     g_window->show();
 
     // blech
+#ifdef _WIN32
     g_window->LoadDirectory("C:/");
+#else
+    g_window->LoadDirectory("/");
+#endif
 
     return app.exec();
 }
