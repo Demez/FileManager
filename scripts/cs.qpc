@@ -1,0 +1,64 @@
+// ---------------------------------------------------------------
+// CopperSpice stuff
+// ---------------------------------------------------------------
+
+macro CS_CFG "debug"    [$DEBUG$]
+macro CS_CFG "release"  [$RELEASE$]
+
+macro CS_DIR "C:/CopperSpice/$CS_CFG$"       [!$CS_DIR$ && $WINDOWS$]
+
+macro CS_INC        "$CS_DIR$/include"
+macro CS_LIB        "$CS_DIR$/lib"
+macro CS_VER        "1.7"
+
+
+build_event "copy_cs" "FILE"
+{
+	"echo Copying CopperSpice File \"$FILE$\""
+	
+	// i should probably just use xcopy lol
+	"cmd /c (robocopy \"$CS_DIR$\bin\" \"$OUT_DIR$\" $FILE$ /njh /njs /ndl /nc /ns) ^& IF %ERRORLEVEL% LEQ 1 exit 0" [$WINDOWS$]
+	// "xcopy $QT_DIR$/bin $OUT_DIR$/$FILE$" [$WINDOWS$]
+}
+
+
+config
+{
+	compile
+	{
+		inc_dirs
+		{
+			"$CS_INC$"
+			"$CS_INC$/QtCore"
+			"$CS_INC$/QtGui"
+		}
+	}
+	
+	link
+	{
+		lib_dirs
+		{
+			"$CS_LIB$"
+		}
+		
+		libs
+		{
+            "CsCore$CS_VER$"
+            "CsGui$CS_VER$"
+		}
+	}
+	
+	post_build [$WINDOWS$]
+    {
+		// weird syntax lol
+        copy_cs
+		{
+			"CsCore$CS_VER$.dll"
+			"CsGui$CS_VER$.dll"
+		}
+		
+		copy "$CS_DIR$/lib" "$OUT_DIR$/plugins/platforms" "CsGuiWin$CS_VER$.dll"
+    }
+}
+
+

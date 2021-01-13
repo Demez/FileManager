@@ -1,0 +1,145 @@
+// ---------------------------------------------------------------
+// Duplicate File Finder QPC Script
+// ---------------------------------------------------------------
+macro PROJECT_NAME "demez_file_manager"
+
+macro PLAT_DIR "win"        [$WINDOWS$]
+macro PLAT_DIR "linux"      [$LINUX$]
+
+macro 32BIT "0"
+macro 64BIT "0"
+
+macro 32BIT "1"	[$I386$ || $ARM$]
+macro 64BIT "1"	[$AMD64$ || $ARM64$]
+
+// macro PLAT_DIR "win32"      [$WINDOWS$]
+// macro PLAT_DIR "win64"      [$WIN64$]
+// macro PLAT_DIR "linux32"    [$LINUX32$]
+// macro PLAT_DIR "linux64"    [$LINUX64$]
+// macro PLAT_DIR "macos"      [$MACOS$]
+
+macro UI "qt"
+// macro UI "cs"
+
+macro OUT_NAME  "fileman"
+macro OUT_DIR   "$ROOT_DIR_ABS$/out_$UI$/$PLAT_DIR$/$CONFIG$"               [!$OUT_DIR$]
+macro OBJ_DIR   "$ROOT_DIR$/obj_$UI$/$OUT_NAME$/$PLAT_DIR$_$CONFIG$"        [!$OBJ_DIR$]
+
+build_event "copy" "SRC" "DEST" "FILE"
+{
+	"echo Copying File \"$FILE$\""
+	
+	"cmd /c (robocopy $SRC$ $DEST$ $FILE$ /njh /njs /ndl /nc /ns) ^& IF %ERRORLEVEL% LEQ 1 exit 0" [$WINDOWS$]
+	"copy $SRC$/$FILE$ $DEST$/$FILE$" [$POSIX$]
+}
+
+include "$UI$.qpc"
+
+
+macro MSVC "1" [$WINDOWS$]
+
+config
+{
+	general
+	{
+		out_name    "$OUT_NAME$"
+		out_dir     "$OUT_DIR$"
+		build_dir   "$OBJ_DIR$"
+		
+		config_type "application"
+		language    "cpp"
+	}
+	
+	compile
+	{
+		defines
+		{
+			"_X86_"     [$I386$]
+			"_AMD64_"   [$AMD64$]
+			"_ARM64_"   [$ARM64$]
+			"_ARM_"     [$ARM$]
+			
+			"WIN32" "_WIN32"     [$WINDOWS$]
+			"WIN64" "_WIN64"     [$WINDOWS$ && $64BIT$]
+			"__linux__"          [$LINUX$]
+			
+			// "PLATFORM_32BIT=$32BIT$"
+			// "PLATFORM_64BIT=$64BIT$"
+			
+			"DEBUG" 	[$DEBUG$]
+		}
+        
+        inc_dirs
+        {
+            "$ROOT_DIR$/src"
+            "$ROOT_DIR$/src/libdemez"
+        }
+		
+		options [$WINDOWS$]
+		{
+			"/Od" "/MTd" "/ZI"  [$DEBUG$]
+			"/O2" "/MT"         [$RELEASE$]
+		}
+	}
+	
+	link
+	{
+		libs [$WINDOWS$]
+		{
+			"ole32.lib"
+			"shell32.lib"
+			"User32.lib"
+			"Comctl32.lib"
+		}
+	}
+}
+
+
+files
+{
+	folder "Qt5"
+	{
+		"$ROOT_DIR$/src/demez_file_manager_qt5.cpp"
+		"$ROOT_DIR$/src/demez_file_manager_qt5.h"
+		"$ROOT_DIR$/src/view_detail.cpp"
+		"$ROOT_DIR$/src/view_detail.h"
+		"$ROOT_DIR$/src/view_icon.cpp"
+		"$ROOT_DIR$/src/view_icon.h"
+		"$ROOT_DIR$/src/flow_layout.cpp"
+		"$ROOT_DIR$/src/flow_layout.h"
+		"$ROOT_DIR$/src/util_qt.cpp"
+		"$ROOT_DIR$/src/util_qt.h"
+		"$ROOT_DIR$/src/folder_tab.cpp"
+		"$ROOT_DIR$/src/folder_tab.h"
+		
+		"$ROOT_DIR$/src/ibase_folder_view.h"
+		"$ROOT_DIR$/src/ibase_deconstructors.cpp"
+    }
+    
+    folder "libdemez"
+    {
+		"$ROOT_DIR$/src/libdemez/util.cpp"
+		"$ROOT_DIR$/src/libdemez/util.h"
+	}
+    
+    folder "OS"
+    {
+		"$ROOT_DIR$/src/platform.h"
+	}
+	
+    folder "OS" [$WINDOWS$]
+    {
+		"$ROOT_DIR$/src/win/general.cpp"
+		"$ROOT_DIR$/src/win/icons.cpp"
+		"$ROOT_DIR$/src/win/win_shared.h"
+		"$ROOT_DIR$/src/win/bookmarks.cpp"
+		"$ROOT_DIR$/src/win/context_menu.cpp"
+		"$ROOT_DIR$/src/win/jumplist.cpp"
+	}
+	
+    folder "OS" [$LINUX$]
+    {
+		"$ROOT_DIR$/src/linux/general.cpp"
+	}
+}
+

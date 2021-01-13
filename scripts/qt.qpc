@@ -1,0 +1,77 @@
+// ---------------------------------------------------------------
+// qt stuff
+// ---------------------------------------------------------------
+
+// shut
+macro QT_DIR "C:\Qt5\5.14.1\msvc2017"       [!$QT_DIR$ && $I386$ && $WINDOWS$]
+macro QT_DIR "C:\Qt5\5.14.1\msvc2017_64"    [!$QT_DIR$ && $AMD64$ && $WINDOWS$]
+
+macro QT_INCLUDE    "$QT_DIR$\include"
+macro QT_LIBS       "$QT_DIR$\lib"
+
+macro D "d" [$DEBUG$]
+macro D ""  [$RELEASE$]
+
+
+build_event "copy_qt" "FILE"
+{
+	"echo Copying QT File \"$FILE$\""
+	
+	// i should probably just use xcopy lol
+	"cmd /c (robocopy \"$QT_DIR$\bin\" \"$OUT_DIR$\" $FILE$ /njh /njs /ndl /nc /ns) ^& IF %ERRORLEVEL% LEQ 1 exit 0" [$WINDOWS$]
+	// "xcopy $QT_DIR$/bin $OUT_DIR$/$FILE$" [$WINDOWS$]
+}
+
+
+config
+{
+	compile
+	{
+		inc_dirs
+		{
+			"$QT_INCLUDE$"
+			"$QT_INCLUDE$/QtWidgets"
+			"$QT_INCLUDE$/QtCore"
+			"$QT_INCLUDE$/QtGui"
+			"$QT_INCLUDE$/QtWinExtras"
+		}
+	}
+	
+	link
+	{
+		lib_dirs
+		{
+			"$QT_LIBS$" [$WINDOWS$]
+		}
+		
+		libs
+		{
+			"Qt5Widgets$D$"
+            "Qt5Core$D$"
+            "Qt5Gui$D$"
+            "Qt5WinExtras$D$"
+		}
+	}
+	
+	post_build [$WINDOWS$]
+    {
+		// weird syntax lol
+        copy_qt
+		{
+			"Qt5Widgets$D$.dll"
+			"Qt5Core$D$.dll"
+			"Qt5Gui$D$.dll"
+			"Qt5WinExtras$D$.dll"
+			
+			"Qt5Widgets$D$.pdb"
+			"Qt5Core$D$.pdb"
+			"Qt5Gui$D$.pdb"
+			"Qt5WinExtras$D$.pdb"
+		}
+		
+		copy "$QT_DIR$/plugins/platforms" "$OUT_DIR$/plugins/platforms" "qwindows$D$.dll"
+		copy "$QT_DIR$/plugins/platforms" "$OUT_DIR$/plugins/platforms" "qwindows$D$.pdb"
+    }
+}
+
+
