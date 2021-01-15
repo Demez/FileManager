@@ -423,7 +423,7 @@ FileItem::~FileItem()
 // ================================================================
 
 
-auto main(int argc, char* argv[]) -> int
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     // QGuiApplication appGUI(argc, argv);
