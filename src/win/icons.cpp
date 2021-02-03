@@ -79,7 +79,7 @@ int g_iconCount = -1;
 
 int WIN_LoadShell32()
 {
-    const char* modName = "shell32.dll";
+    const wchar_t* modName = L"shell32.dll";
 
     g_shell32 = LoadLibrary(modName);
     if (!g_shell32)
@@ -162,14 +162,14 @@ QPixmap OS_LoadIconShell(int index)
 }
 
 #ifdef UNICODE
-LPCWSTR stringToLPCSTR(const std::string& str)
+LPCWSTR stringToLPCWSTR(const std::wstring& str)
 #else
 LPCSTR stringToLPCSTR(const std::string& str)
 #endif
 {
     #ifdef UNICODE
-    std::wstring tmp(str.begin(), str.end());
-    LPCWSTR result = tmp.c_str();
+    // std::wstring tmp(str.begin(), str.end());
+    LPCWSTR result = str.c_str();
     #else
     LPCSTR result = str.c_str();
     #endif
@@ -177,7 +177,7 @@ LPCSTR stringToLPCSTR(const std::string& str)
 }
 
 
-HICON GetFileIcon(const std::string path, EIconSize type)
+HICON GetFileIcon(const std::wstring& path, EIconSize type)
 {
     HICON hIcon;
     SHFILEINFO sfi={0};
@@ -191,8 +191,8 @@ HICON GetFileIcon(const std::string path, EIconSize type)
     case EIconSize::EXTRALARGE:     flag |= SHGFI_SYSICONINDEX; break;
     }
 
-    LPCSTR lpPath = stringToLPCSTR(path);
-    DWORD_PTR hr = SHGetFileInfoA(lpPath, GetFileAttributesA(lpPath), &sfi, sizeof(sfi), flag);
+    LPCWSTR lpPath = stringToLPCWSTR(path);
+    DWORD_PTR hr = SHGetFileInfoW(lpPath, GetFileAttributesW(lpPath), &sfi, sizeof(sfi), flag);
 
     if (SUCCEEDED(hr))
     {
@@ -221,7 +221,7 @@ HICON GetFileIcon(const std::string path, EIconSize type)
 
 QPixmap OS_LoadIcon(const fs::path& path, EIconSize size)
 {
-    HICON hIcon = GetFileIcon(path.string(), size);
+    HICON hIcon = GetFileIcon(path.wstring(), size);
 
     QPixmap pixmap;
 

@@ -10,6 +10,7 @@ QString ToQString(const fs::path& path);
 
 void QStrToChar(const QString& qString, char* cStr);
 std::string QStrToStr(const QString& qString);
+std::wstring QStrToWStr(const QString& qString);
 
 void ClearLayout(QLayout *layout);
 

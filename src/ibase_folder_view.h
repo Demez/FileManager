@@ -14,7 +14,7 @@ public:
 
     virtual QWidget* GetWidget() = 0;
 
-    virtual void DisplayDirectory(const std::string& path) = 0;
+    virtual void DisplayDirectory(const std::wstring& path) = 0;
     virtual void AddFile(const fs::path& path) = 0;
 
     virtual void DeselectAll() = 0;

@@ -73,8 +73,10 @@ enum class EFileType
 
 int                             OS_Init();
 
-std::vector<std::string>        OS_GetMountedDrives();
-std::vector<std::string>        OS_GetBookmarks();
+std::vector<std::wstring>       OS_GetMountedDrives();
+
+// TODO: probably make a bookmark manager as well
+std::vector<fs::path>           OS_GetBookmarks();
 
 QPixmap                         OS_LoadIcon(EIcon icon);  // this should probably have a size option as well
 QPixmap                         OS_LoadIcon(const fs::path& path, EIconSize size);
@@ -82,14 +84,11 @@ QPixmap                         OS_LoadIcon(const fs::path& path, EIconSize size
 // windows has a system to make thumbnails, but i have no clue how i would handle it on linux
 // QPixmap                         OS_MakeThumbnail(const fs::path& path);
 
-int                             OS_OpenProgram(const std::string& path);
+int                             OS_OpenProgram(const std::wstring& path);
 
-// maybe make this a virtual class? idk
-// void                            OS_LoadContextMenu(QMenu* menu, const char* currentDir, std::vector<fs::path> items);
-// void                            OS_RunContextMenuItem(fs::path& currentDir);
-
-// void                            OS_ClipboardCopy(const std::string& item);
-// void                            OS_ClipboardCut(const std::string& item);
+// clipboard manager class?
+// void                            OS_ClipboardCopy(const std::wstring& item);
+// void                            OS_ClipboardCut(const std::wstring& item);
 // void                            OS_ClipboardPaste(const fs::path& dir);
 
 // possible folder view settings for windows:
@@ -110,8 +109,8 @@ public slots:
     // NOTE: LoadMenu is called on another thread, but im going to change that so it's not
     // im probably going to get rid of it, it doesn't work with the win32 context menu
     // so just stub LoadMenu and only use DisplayMenu and CloseMenu
-    virtual void LoadMenu(QPoint pos, const char* currentDir, std::vector<fs::path> items) = 0;
-    virtual void DisplayMenu(QPoint pos, const char* currentDir, std::vector<fs::path> items) = 0;
+    virtual void LoadMenu(QPoint pos, const wchar_t* currentDir, std::vector<fs::path> items) = 0;
+    virtual void DisplayMenu(QPoint pos, const wchar_t* currentDir, std::vector<fs::path> items) = 0;
     virtual void CloseMenu() = 0;
 
 signals:
@@ -123,8 +122,8 @@ signals:
 class IFolderViewManager
 {
 public:
-    virtual void GetViewSettings(const char* dir, FolderViewSettings& settings) = 0;
-    virtual void SetViewSettings(const char* dir, FolderViewSettings& settings) = 0;
+    virtual void GetViewSettings(const wchar_t* dir, FolderViewSettings& settings) = 0;
+    virtual void SetViewSettings(const wchar_t* dir, FolderViewSettings& settings) = 0;
 };
 
 

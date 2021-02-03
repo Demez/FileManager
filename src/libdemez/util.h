@@ -102,7 +102,8 @@ inline void str_lower(std::string &string)
 
 std::string RemoveFileExt(std::string &path);
 
-const char* PathToCStr(const fs::path& path);
+const char* PathToChar(const fs::path& path);
+const wchar_t* PathToWChar(const fs::path& path);
 
 void OS_Sleep(int ms);
 bool OS_IsJunction(const fs::path &dir);

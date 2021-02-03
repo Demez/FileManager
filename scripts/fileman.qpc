@@ -67,6 +67,8 @@ config
 			// "PLATFORM_64BIT=$64BIT$"
 			
 			"DEBUG" 	[$DEBUG$]
+			
+			"_UNICODE" "UNICODE" [$WINDOWS$]
 		}
         
         inc_dirs

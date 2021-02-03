@@ -44,14 +44,14 @@ void WIN_PrintLastError(const char* format, ...)
     va_end(args);
 
     DWORD dLastError = GetLastError();
-    LPCTSTR strErrorMessage = NULL;
+    LPCWSTR strErrorMessage = NULL;
 
     FormatMessage(
                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_ALLOCATE_BUFFER,
                 NULL,
                 dLastError,
                 0,
-                (LPSTR) &strErrorMessage,
+                (LPWSTR) &strErrorMessage,
                 0,
                 NULL);
 
@@ -79,16 +79,16 @@ int OS_Init()
 #undef INIT_FUNC
 
 
-std::vector<std::string> OS_GetMountedDrives()
+std::vector<std::wstring> OS_GetMountedDrives()
 {
-    std::vector<std::string> mountedDrives;
+    std::vector<std::wstring> mountedDrives;
 
-    WCHAR wcharDriveLetters[512];
+    wchar_t wcharDriveLetters[512];
     GetLogicalDriveStringsW(512-1, wcharDriveLetters);
 
-    for (int i = 0; i < sizeof(wcharDriveLetters); i += 4)
+    for (wchar_t i = 0; i < sizeof(wcharDriveLetters); i += 4)
     {
-        std::string driveLetters = wchar_to_string(&wcharDriveLetters[i]);
+        std::wstring driveLetters = &wcharDriveLetters[i];
         if (driveLetters.length() == 3)
         {
             mountedDrives.push_back(driveLetters);
@@ -103,9 +103,9 @@ std::vector<std::string> OS_GetMountedDrives()
 }
 
 
-int OS_OpenProgram(const std::string& path)
+int OS_OpenProgram(const std::wstring& path)
 {
-    ShellExecute(NULL, "open", path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+    ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
     // STARTUPINFO info={sizeof(info)};
     // PROCESS_INFORMATION processInfo;
@@ -141,7 +141,7 @@ class Win32FolderViewManager: public IFolderViewManager
 {
 public:
 
-    void GetViewSettings(const char* dir, FolderViewSettings& settings)
+    void GetViewSettings(const wchar_t* dir, FolderViewSettings& settings)
     {
         IShellBrowser *shBrowser = (IShellBrowser*)SendMessage(WIN_GetHWND(), WM_GETISHELLBROWSER, 0, 0);
         IShellView *shView = NULL;
@@ -174,7 +174,7 @@ public:
         }*/
     }
 
-    void SetViewSettings(const char* dir, FolderViewSettings& settings)
+    void SetViewSettings(const wchar_t* dir, FolderViewSettings& settings)
     {
         // currently restores view settings
         IShellBrowser *shBrowser = (IShellBrowser*)SendMessage(WIN_GetHWND(), WM_GETISHELLBROWSER, 0, 0);

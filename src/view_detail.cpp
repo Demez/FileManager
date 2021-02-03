@@ -22,26 +22,21 @@ FileListDetailModel::~FileListDetailModel()
 // and not in the model either, so when we switch views, we don't pointlessly reload this
 // after the async load, add all the items from whatever class we store that in
 // that way, it's still loaded when we switch views
-void FileListDetailModel::DisplayDirectory(const std::string& path)
+void FileListDetailModel::DisplayDirectory(const std::wstring& path)
 {
 }
 
 
 void FileListDetailModel::AddItem(const fs::path& file)
 {
-    std::string fileString = file.filename().string();
-    QString fileName(fileString.c_str());
-
-    // itemIcon->image
-
     QStandardItem* itemIcon = new QStandardItem;
 
     QPixmap pixmap = OS_LoadIcon(file, EIconSize::SMALL);
     if (pixmap.isNull())
     {
         // wtf
-        std::string pathStr = file.string();
-        printf("failed to load icon for \"%s\"\n", pathStr.c_str());
+        std::wstring pathStr = file.wstring();
+        printf("failed to load icon for \"%ls\"\n", pathStr.c_str());
         // return;
     }
     else
@@ -51,7 +46,7 @@ void FileListDetailModel::AddItem(const fs::path& file)
     }
 
     QStandardItem* itemFileName = new QStandardItem;
-    itemFileName->setText(fileName);
+    itemFileName->setText(ToQString(file.filename()));
 
     // temp position, will iterate through the directory first,
     // then sort the files, then add the files
@@ -70,7 +65,7 @@ void FileListDetailModel::RemoveItem(const fs::path& file)
         // TODO: change this when you make columns movable
         QStandardItem* item = this->item(i, 0);
 
-        if (item->text() == PathToCStr(file))
+        if (item->text() == ToQString(file))
         {
             RemoveItem(i);
             break;
@@ -95,6 +90,12 @@ void FileListDetailModel::RemoveItem(int row)
     removeRow(row);
 }
 
+
+bool FileListDetailModel::event(QEvent* e)
+{
+    return QStandardItemModel::event(e);
+}
+
 // ================================================================
 
 
@@ -103,8 +104,13 @@ FileListDetailView::FileListDetailView()
     m_model = new FileListDetailModel;
     m_view = new QTreeView;
     m_view->setModel(m_model);
+
     m_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_view->setSelectionBehavior (QAbstractItemView::SelectRows);
+
     m_view->header()->setStretchLastSection(false);
+
+    // connect(m_view, &QTreeView::tri, this, &FileListDetailView::OnEvent);
 }
 
 FileListDetailView::~FileListDetailView()
@@ -122,11 +128,11 @@ QWidget* FileListDetailView::GetWidget()
 
 FileListDetailModel* FileListDetailView::FileList()
 {
-    return (FileListDetailModel*)m_view->model();
+    return m_model;
 }
 
 
-void FileListDetailView::DisplayDirectory(const std::string& path)
+void FileListDetailView::DisplayDirectory(const std::wstring& path)
 {
     // or removeRows(rowCount())
     FileList()->clear();
@@ -168,6 +174,11 @@ void FileListDetailView::AddFile(const fs::path& path)
 void FileListDetailView::DeselectAll()
 {
 
+}
+
+void FileListDetailView::OnEvent(QEvent* e)
+{
+    printf("asd\n");
 }
 
 std::vector<fs::path> FileListDetailView::GetSelectedFiles()

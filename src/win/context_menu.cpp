@@ -42,6 +42,24 @@ bool WIN_GetPIDL(const char* cStr, PIDLIST_ABSOLUTE &pidlItem)
 }
 
 
+bool WIN_GetPIDL(const wchar_t* cStr, PIDLIST_ABSOLUTE &pidlItem)
+{
+    std::wstring wStr = cStr;
+    str_replace(wStr, L"/", L"\\"); // needs to be backslashes here
+    PCWSTR pcwStr = wStr.c_str();
+
+    // wiki says this should be called from a background thread
+    HRESULT hr = SHParseDisplayName(pcwStr, nullptr, &pidlItem, SFGAO_FILESYSTEM, nullptr);
+
+    if (!SUCCEEDED(hr))
+    {
+        WIN_PrintLastError("Failed to make PIDL for path \"%s\"", cStr);
+    }
+
+    return SUCCEEDED(hr);
+}
+
+
 // ok this is just a direct copy and paste from explorer++ lmao
 HRESULT BindToIdl(PCIDLIST_ABSOLUTE pidl, REFIID riid, void **ppv)
 {
@@ -75,136 +93,15 @@ HRESULT WIN_GetUIObjectOf(IShellFolder* shellDir, HWND hwnd, UINT cidl, PCUITEMI
 }
 
 
-// tbh, i should just make this a class, idk
-// this would be the constructor
-int WIN_InitContextMenu(const char* currentDir, std::vector<fs::path> items)
-{
-    /*if (g_context != nullptr)
-    {
-        return 0;
-    }*/
-
-    HRESULT hr;
-    IContextMenu* tmpContext;
-    HWND hwnd = (HWND)g_window->winId();
-
-    PIDLIST_ABSOLUTE pidCurrentDir;
-    WIN_GetPIDL(currentDir, pidCurrentDir);
-
-    // No items selected
-    if (items.empty())
-    {
-        IShellFolder* shellCurrentDir;
-        PCUITEMID_CHILD pidlRelative = nullptr;
-        hr = SHBindToParent(pidCurrentDir, IID_PPV_ARGS(&shellCurrentDir), &pidlRelative);
-
-        if (SUCCEEDED(hr))
-        {
-            // load the context menu for no selected items
-            hr = WIN_GetUIObjectOf(shellCurrentDir, hwnd, 1, &pidlRelative, IID_PPV_ARGS(&tmpContext));
-        }
-    }
-    else
-    {
-        IShellFolder* shellFolder;
-        hr = BindToIdl(pidCurrentDir, IID_PPV_ARGS(&shellFolder));
-
-        if (SUCCEEDED(hr))
-        {
-            // Load pContextMenu with the items needed
-            std::vector<PCITEMID_CHILD> pidlItems;
-            for (fs::path item: items)
-            {
-                PIDLIST_ABSOLUTE pidlItem;
-                if (WIN_GetPIDL(PathToCStr(item), pidlItem))
-                {
-                    pidlItems.push_back(pidlItem);
-                }
-            }
-
-            hr = WIN_GetUIObjectOf(shellFolder, hwnd, static_cast<UINT>(items.size()),
-                pidlItems.data(), IID_PPV_ARGS(&g_context));
-        }
-    }
-
-    if (SUCCEEDED(hr))
-    {
-        // First, try to get IContextMenu3, then IContextMenu2, and if neither of these are available, IContextMenu.
-        hr = tmpContext->QueryInterface(IID_PPV_ARGS(&g_tmpContext3));
-        g_context = g_tmpContext3;
-
-        if (FAILED(hr))
-        {
-            hr = tmpContext->QueryInterface(IID_PPV_ARGS(&g_tmpContext2));
-            g_context = g_tmpContext2;
-
-            if (FAILED(hr))
-            {
-                hr = tmpContext->QueryInterface(IID_PPV_ARGS(&g_tmpContext));
-                g_context = g_tmpContext;
-            }
-        }
-    }
-
-    return 0;
-}
-
-
 void WIN_ContextMenuAction()
 {
     printf("oo diddy\n");
 }
 
 
+// obsolete
 void OS_LoadContextMenu(QMenu* menu, const char* currentDir, std::vector<fs::path> items)
 {
-    // QtWin::
-    // menu->winId();
-    WIN_InitContextMenu(currentDir, items);
-
-    HMENU hMenu = CreatePopupMenu();
-
-    if (hMenu == nullptr)
-    {
-        return;
-        // return E_FAIL;
-    }
-
-    UINT flags = CMF_NORMAL;
-
-    // ok this NEEDS to be on another thread, this can take a second or two lmao
-    HRESULT hr = g_context->QueryContextMenu(hMenu, 0, g_minShellId, g_maxShellId, flags);
-
-    if (!SUCCEEDED(hr))
-    {
-        // might just be out of items in the menu, idk
-        WIN_PrintLastError("Failed to query context menu");
-        return;
-    }
-
-    // idk if i can even call this yet, but whatever
-    int x, y = 64;
-    HWND hwnd = (HWND)g_window->winId();
-    int iCmd = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD, x, y, 0, hwnd, nullptr);
-
-    for (int i = 1; i < g_maxShellId; i++)
-    {
-        TCHAR szCmd[64];
-        hr = g_context->GetCommandString(i, GCS_VERB, nullptr, reinterpret_cast<LPSTR>(szCmd), 64);
-
-        if (!SUCCEEDED(hr))
-        {
-            // might just be out of items in the menu, idk
-            WIN_PrintLastError("Failed to get command string for item %d in context menu", i);
-            break;
-        }
-
-        QAction* action = new QAction;
-        action->setText(szCmd);
-        QAction::connect(action, &QAction::triggered, &WIN_ContextMenuAction);
-    }
-
-    printf("bruh\n");
 }
 
 
@@ -239,7 +136,7 @@ public:
     Win32ContextMenuHandler()  {}
     ~Win32ContextMenuHandler() {}
 
-    void LoadMenu(QPoint pos, const char* currentDir, std::vector<fs::path> items)
+    void LoadMenu(QPoint pos, const wchar_t* currentDir, std::vector<fs::path> items)
     {
         HRESULT hr;
         IContextMenu* tmpContext;
@@ -273,7 +170,7 @@ public:
                 for (fs::path item: items)
                 {
                     PIDLIST_ABSOLUTE pidlItem;
-                    if (WIN_GetPIDL(PathToCStr(item), pidlItem))
+                    if (WIN_GetPIDL(PathToChar(item), pidlItem))
                     {
                         pidlItems.push_back(pidlItem);
                     }
@@ -323,10 +220,10 @@ public:
             return;
         }
 
-        emit LoadingFinished(pos, items);
+        // emit LoadingFinished(pos, items);
     }
 
-    void DisplayMenu(QPoint pos, const char* currentDir, std::vector<fs::path> items)
+    void DisplayMenu(QPoint pos, const wchar_t* currentDir, std::vector<fs::path> items)
     {
         // watch it break because it's on the main thread now
         printf("display context menu moment");

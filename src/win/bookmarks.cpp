@@ -24,24 +24,24 @@
 
 std::wstring GetAppDataPath()
 {
-    char config[MAX_PATH] = {};
+    wchar_t config[MAX_PATH] = {};
     SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, &config[0]);
     // SHGetKnownFolderPath(nullptr, FOLDERID_ProgramData, nullptr, SHGFP_TYPE_CURRENT, &config[0]);
-    return StrToWStr(config);
+    return config;
 }
 
 
 std::wstring GetRecycleBinPath()
 {
-    char config[MAX_PATH] = {};
+    wchar_t config[MAX_PATH] = {};
     SHGetFolderPath(nullptr, CSIDL_BITBUCKET, nullptr, SHGFP_TYPE_CURRENT, &config[0]);
-    return StrToWStr(config);
+    return config;
 }
 
 
-std::vector<std::string> OS_GetBookmarks()
+std::vector<fs::path> OS_GetBookmarks()
 {
-    std::vector<std::string> bookmarks;
+    std::vector<fs::path> bookmarks;
 
     std::wstring quickAccessFile = GetAppDataPath() + WIN_AD_PATH + WIN_AD_QUICK_ACCESS + WIN_AD_EXT;
 
@@ -107,9 +107,13 @@ std::vector<std::string> OS_GetBookmarks()
                                     hr = targetItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &szTarget);
                                     if (SUCCEEDED(hr))
                                     {
-                                        std::wstring ws = szTarget;
+                                        // std::wstring ws = szTarget;
+                                        // bookmarks.push_back( std::string(ws.begin(), ws.end()) );
 
-                                        bookmarks.push_back( std::string(ws.begin(), ws.end()) );
+                                        // fs::path ws = szTarget;
+                                        // bookmarks.push_back(ws);
+
+                                        bookmarks.push_back(szTarget);
 
                                         // removing bookmark, will probably need to use later
                                         /*CString wPathToFolder = CharLower(szTarget);

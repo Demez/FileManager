@@ -42,12 +42,22 @@ public:
     FileListDetailModel();
     ~FileListDetailModel();
 
-    void DisplayDirectory(const std::string& path);
+    void DisplayDirectory(const std::wstring& path);
     void AddItem(const fs::path& file);
     void RemoveItem(const fs::path& file);
     void RemoveItem(int row);
 
+    bool event(QEvent* e) override;
+
     std::vector<FileDetail*> m_files;
+};
+
+
+// testing
+class FileDetailView: public QAbstractItemView
+{
+public:
+
 };
 
 
@@ -61,7 +71,7 @@ public:
 
     QWidget* GetWidget() override;
 
-    void DisplayDirectory(const std::string& path) override;
+    void DisplayDirectory(const std::wstring& path) override;
     void AddFile(const fs::path& path) override;
 
     void DeselectAll() override;
@@ -69,6 +79,8 @@ public:
     std::vector<fs::path> GetSelectedFiles() override;
 
     // ==================================================
+
+    void OnEvent(QEvent* e);
 
     FileListDetailModel* FileList();
 

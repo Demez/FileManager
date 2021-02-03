@@ -38,7 +38,7 @@ public:
 
     QWidget* GetWidget() override;
 
-    void DisplayDirectory(const std::string& path) override;
+    void DisplayDirectory(const std::wstring& path) override;
     void AddFile(const fs::path& path) override;
 
     void DeselectAll() override;

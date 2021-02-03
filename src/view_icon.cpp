@@ -22,7 +22,7 @@ FileListIcon::FileListIcon(const fs::path& path, QWidget* parent):
 
     // setup text (should not be in this function)
     m_label = new QLabel(this);
-    m_label->setText(ToQString(path.filename().string()));
+    m_label->setText(ToQString(path.filename().wstring()));
     m_label->setAlignment(Qt::AlignCenter);
     // m_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     m_label->setWordWrap(true);
@@ -64,7 +64,7 @@ void FileListIcon::LoadIcon()
     m_icon = OS_LoadIcon(m_path, EIconSize::MEDIUM);
     if (m_icon.isNull())
     {
-        printf("failed to load icon for \"%s\"\n", PathToCStr(m_path));
+        printf("failed to load icon for \"%s\"\n", PathToChar(m_path));
         return;
     }
 
@@ -79,6 +79,7 @@ void FileListIcon::resizeEvent(QResizeEvent* e)
 
 
 // blech
+#define COLOR_NONE "background: transparent;"
 #define COLOR_HOVER "background: #a1dcff;"
 #define COLOR_SELECTED "background: #5cc2ff;"
 #define COLOR_SELECTED_HOVER "background: #4dbcff;"
@@ -109,7 +110,7 @@ void FileListIcon::leaveEvent(QEvent* e)
     }
     else
     {
-        setStyleSheet("background: transparent;");
+        setStyleSheet(COLOR_NONE);
     }
 }
 
@@ -147,17 +148,17 @@ void FileListIcon::mouseDoubleClickEvent(QMouseEvent* e)
         {
             if (fs::is_directory(m_path))
             {
-                g_window->LoadDirectory(m_path.string());
+                g_window->LoadDirectory(m_path.wstring());
             }
             else
             {
-                OS_OpenProgram(m_path.string());
+                OS_OpenProgram(m_path.wstring());
                 // g_window->OpenFile(m_path.string());
             }
         }
         catch (fs::filesystem_error)
         {
-            printf("Error checking \"%s\"\n", PathToCStr(m_path));
+            printf("Error checking \"%s\"\n", PathToChar(m_path));
         }
     }
 }
@@ -166,7 +167,7 @@ void FileListIcon::mouseDoubleClickEvent(QMouseEvent* e)
 void FileListIcon::Deselect()
 {
     m_selected = false;
-    setStyleSheet("background: transparent;");
+    setStyleSheet(COLOR_NONE);
 }
 
 
@@ -257,7 +258,7 @@ void FileListIconView::mousePressEvent(QMouseEvent* e)
 }
 
 
-void FileListIconView::DisplayDirectory(const std::string& path)
+void FileListIconView::DisplayDirectory(const std::wstring& path)
 {
     ClearLayout(m_layout);
     m_files.clear();
@@ -277,9 +278,6 @@ void FileListIconView::DisplayDirectory(const std::string& path)
 
 void FileListIconView::AddFile(const fs::path& path)
 {
-    std::string fileString = path.filename().string();
-    QString fileName(fileString.c_str());
-
     FileListIcon* fileListIcon = new FileListIcon(path, this);
 
     m_layout->addWidget(fileListIcon);

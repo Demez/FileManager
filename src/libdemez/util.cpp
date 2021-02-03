@@ -127,10 +127,18 @@ bool ItemExists(const std::string &path)
 }
 
 
-const char* PathToCStr(const fs::path& path)
+const char* PathToChar(const fs::path& path)
 {
-	static std::string result;
-	result = path.string();
+    static std::string result;
+    result = path.string();
+    return result.c_str();
+}
+
+
+const wchar_t* PathToWChar(const fs::path& path)
+{
+    static std::wstring result;
+    result = path.wstring();
 	return result.c_str();
 }
 
